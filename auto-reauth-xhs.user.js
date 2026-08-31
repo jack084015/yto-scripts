@@ -8,8 +8,8 @@
 // @match        https://customer.xiaohongshu.com/*
 // @match        https://www.xiaohongshu.com/*
 // @match        https://ark.xiaohongshu.com/*
-// @updateURL    https://jack084015.github.io/yto-scripts/auto-reauth.user.js
-// @downloadURL  https://jack084015.github.io/yto-scripts/auto-reauth.user.js
+// @updateURL    https://jack084015.github.io/yto-scripts/auto-reauth-xhs.user.js
+// @downloadURL  https://jack084015.github.io/yto-scripts/auto-reauth-xhs.user.js
 // @grant        GM_openInTab
 // @run-at       document-idle
 // ==/UserScript==
