@@ -28,6 +28,7 @@
   const TRIGGER_PARAM = 'vm-auto-run';                               // URL 标记参数
   const XHS_EMAIL = 'xxx';                           // 小红书邮箱
   const XHS_PASSWORD = 'xxx';                                 // 小红书密码
+  const SHOP_NAME = '牙吃多了糖会痛的店';                              // 店铺名称
 
   // ═══════════════════════════════════════════════════════════
   // 工具函数
@@ -108,11 +109,19 @@
       console.log('[油猴] Step 1：点击【请选择店铺】');
       await clickAndDelay(selector, 1200);
 
-      // Step 2：选择【小红书的店铺】
-      console.log('[油猴] Step 2：等待下拉选项【小红书的店铺】...');
-      const option = await waitFor(() => findDropdownOption('小红书的店铺'), '小红书的店铺');
+      // Step 2：选择【牙吃多了糖会痛的店】
+      console.log('[油猴] Step 2：等待下拉选项【牙吃多了糖会痛的店】...');
+      const option = await waitFor(() => {
+        // XPath: //span[contains(text(),'牙吃多了糖会痛的店')]
+        const xpath = `//span[contains(text(),'${SHOP_NAME}')]`;
+        const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+        const el = result.singleNodeValue;
+        if (el && el.offsetParent !== null) return el;
+        // fallback
+        return findDropdownOption(SHOP_NAME) || null;
+      }, '牙吃多了糖会痛的店');
 
-      console.log('[油猴] Step 2：点击【小红书的店铺】');
+      console.log('[油猴] Step 2：点击【牙吃多了糖会痛的店】');
       await clickAndDelay(option, 1200);
 
       // Step 3：点击【筛选】
@@ -171,12 +180,12 @@
       console.log('[油猴] Step 2：等待【牙吃多了糖会痛的店】...');
       const shopOption = await waitFor(() => {
         // XPath: //span[contains(text(),'牙吃多了糖会痛的店')]
-        const xpath = "//span[contains(text(),'牙吃多了糖会痛的店')]";
+        const xpath = `//span[contains(text(),'${SHOP_NAME}')]`;
         const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
         const el = result.singleNodeValue;
         if (el && el.offsetParent !== null) return el;
         // fallback
-        return findByText('span, .el-select-dropdown__item, .el-tree-node__content', '牙吃多了糖会痛的店') || null;
+        return findByText('span, .el-select-dropdown__item, .el-tree-node__content', SHOP_NAME) || null;
       }, '牙吃多了糖会痛的店');
 
       console.log('[油猴] Step 2：点击【牙吃多了糖会痛的店】');
