@@ -25,6 +25,7 @@
   const ORDER_URL = 'https://erp.yto.net.cn/order/orderOperate/listnew'; // 订单查询页面
   const TRIGGER_CMD = 'reauth';                                      // 重新授权指令
   const ORDER_CMD = 'order-query';                                   // 订单查询指令
+  const SEARCH_PREFIX = 'search-waybill:';                           // 运单号查询指令前缀
   const TRIGGER_PARAM = 'vm-auto-run';                               // URL 标记参数
   const XHS_EMAIL = 'xxx';                           // 小红书邮箱
   const XHS_PASSWORD = 'xxx';                                 // 小红书密码
@@ -214,6 +215,57 @@
   }
 
   // ═══════════════════════════════════════════════════════════
+  // 运单号查询流程（在 ERP 订单页面执行）
+  // ═══════════════════════════════════════════════════════════
+  async function runWaybillSearch(waybillNo) {
+    try {
+      console.log(`[油猴] 开始执行运单号查询流程，运单号：${waybillNo}`);
+
+      // 等待页面渲染完成
+      console.log('[油猴] 等待页面渲染...');
+      await new Promise(r => setTimeout(r, 3000));
+
+      // Step 1：点击运单号输入框
+      console.log('[油猴] Step 1：等待运单号输入框...');
+      const textarea = await waitFor(() => {
+        return document.querySelector("textarea[placeholder*='请输入单号']") || null;
+      }, '运单号输入框');
+
+      console.log('[油猴] Step 1：点击运单号输入框');
+      textarea.focus();
+      textarea.click();
+      await new Promise(r => setTimeout(r, 800));
+
+      // Step 2：输入运单号
+      console.log('[油猴] Step 2：输入运单号');
+      textarea.value = waybillNo;
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 800));
+
+      // Step 3：点击查询按钮
+      console.log('[油猴] Step 3：等待【查询】按钮...');
+      const searchBtn = await waitFor(() => {
+        // XPath: //span[contains(text(),'查 询')]
+        const xpath = "//span[contains(text(),'查 询')]";
+        const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+        const el = result.singleNodeValue;
+        if (el && el.offsetParent !== null) return el;
+        // fallback：找父级 button
+        if (el) return el.closest('button') || el;
+        return null;
+      }, '查询按钮');
+
+      console.log('[油猴] Step 3：点击【查询】 ✓ 运单号查询完成');
+      searchBtn.click();
+      searchBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // 小红书登录流程（在小红书页面执行）
   // ═══════════════════════════════════════════════════════════
   function isXiaohongshuPage() {
@@ -358,6 +410,11 @@
         const url = `${ORDER_URL}?${TRIGGER_PARAM}=1`;
         console.log(`[油猴] 正在打开订单查询页面：${url}`);
         GM_openInTab(url, { active: true, insert: true }, false);
+      } else if (cmd.startsWith(SEARCH_PREFIX)) {
+        const waybillNo = cmd.substring(SEARCH_PREFIX.length).trim();
+        const url = `${ORDER_URL}?${TRIGGER_PARAM}=1&waybill=${encodeURIComponent(waybillNo)}`;
+        console.log(`[油猴] 正在打开运单号查询页面：${url}`);
+        GM_openInTab(url, { active: true, insert: true }, false);
       }
     };
 
@@ -385,9 +442,16 @@
   } else if (isOrderPage()) {
     // 在订单查询页面：检查是否由 WebSocket 触发
     if (location.search.includes(`${TRIGGER_PARAM}=1`)) {
-      console.log('[油猴] 由 WebSocket 触发进入订单查询页面，开始执行');
+      const params = new URLSearchParams(location.search);
+      const waybill = params.get('waybill');
       history.replaceState(null, '', location.pathname + location.hash);
-      runOrderQuery();
+      if (waybill) {
+        console.log(`[油猴] 由 WebSocket 触发进入订单页面，运单号：${waybill}`);
+        runWaybillSearch(decodeURIComponent(waybill));
+      } else {
+        console.log('[油猴] 由 WebSocket 触发进入订单查询页面，开始执行');
+        runOrderQuery();
+      }
     } else {
       console.log('[油猴] 已进入订单查询页面，非 WebSocket 触发，不自动执行');
     }
