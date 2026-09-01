@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         自动重新授权 - WebSocket 触发2.3
+// @name         自动重新授权 - WebSocket 触发2.4
 // @namespace    https://erp.yto.net.cn/
-// @version      2.3
+// @version      2.4
 // @description  监听 WebSocket 消息，收到指令后打开 ERP 页面并自动执行重新授权
 // @match        https://erp.yto.net.cn/systemSetting/storeMag*
 // @match        https://erp.yto.net.cn/*
